@@ -38,7 +38,7 @@ async function getMiDeviceIpAddress(timeout) {
         devices.on('available', device => {
             console.log('Found device - ' + device.address);
             ipArray.push(device.address);
-            // Assuming only 1 miio device is there resolving quickly.
+            // Assuming only 1 miio device is there and resolving quickly.
             resolve(ipArray);
         });
         setTimeout(function () {
