@@ -1,0 +1,28 @@
+{
+  "name": "mi-airpurifier2-datalogger",
+  "version": "1.0.0",
+  "description": "an application to fetch the sensor details and control mi airpuririer 2",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anilrv/mi-airpurifier2-datalogger.git"
+  },
+  "keywords": [
+    "miio"
+  ],
+  "author": "ANiL",
+  "license": "Apache",
+  "bugs": {
+    "url": "https://github.com/anilrv/mi-airpurifier2-datalogger/issues"
+  },
+  "homepage": "https://github.com/anilrv/mi-airpurifier2-datalogger#readme",
+  "dependencies": {
+    "azure-iot-device": "^1.17.3",
+    "azure-iot-device-http": "^1.13.3",
+    "dotenv": "^8.2.0",
+    "miio": "^0.15.6"
+  }
+}
