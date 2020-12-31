@@ -17,9 +17,9 @@ Initilize();
 async function Initilize() {
     let ipArray = await getMiDeviceIpAddress(ONE_SECOND * 30);
     let devices = [];
-    ipArray.forEach(ip => {
+    for (const ip of ipArray) {
         devices.push(await connectToDevice(ip, PurifierToken));
-    });
+    }
     devices.forEach(device => {
         logDeviceParameters(device);
         setInterval(() => {
