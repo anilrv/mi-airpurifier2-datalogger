@@ -14,14 +14,12 @@
     "miio"
   ],
   "author": "ANiL",
-  "license": "Apache",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/anilrv/mi-airpurifier2-datalogger/issues"
   },
   "homepage": "https://github.com/anilrv/mi-airpurifier2-datalogger#readme",
   "dependencies": {
-    "azure-iot-device": "^1.17.3",
-    "azure-iot-device-http": "^1.13.3",
     "dotenv": "^8.2.0",
     "miio": "^0.15.6"
   }
