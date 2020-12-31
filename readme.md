@@ -1,4 +1,4 @@
-<h2>Steps to download device token using Mi Home App</h2>
+<h2>Steps to get device token, using Mi Home App</h2>
 
 <ol>
 <li>Install Mi Home App on your iOS or Android phone. Then add new device. Be sure you can control it via app with no problems.</li>
