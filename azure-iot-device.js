@@ -1,26 +1,43 @@
 'use strict';
 
 const Dotenv = require('dotenv');
+Dotenv.config();
+
 const Protocol = require('azure-iot-device-http').Http;
 const Client = require('azure-iot-device').Client;
 const Message = require('azure-iot-device').Message;
 const AirPurifier = require('miio/lib/devices/air-purifier');
 const miio = require('miio');
-
+const PurifierToken = process.env.TOKEN;
 const deviceConnectionString = process.env.AZURE_IOT_DEVICE_CONNECTION_STRING;
+const client = Client.fromConnectionString(deviceConnectionString, Protocol);
+const messageObj = function (temp, rh, aqi) {
+    this.temp = temp;
+    this.rh = rh;
+    this.aqi = aqi;
+};
+const ONE_SECOND = 1;
+const ONE_MILLI_SECOND = 1000;
+const ONE_SECOND_MS = ONE_SECOND * ONE_MILLI_SECOND;
 let sendInterval;
+let device;
 
-Dotenv.config();
 Initilize();
 
-async function InitilizePurifier() {
-    miio.models['zhimi.airpurifier.mc1'] = AirPurifier;
-    let ipArray = await getMiDeviceIpAddress(ONE_SECOND * 30);
-    let devices = [];
-    for (const ip of ipArray) {
-        devices.push(await connectToDevice(ip, PurifierToken));
-    }
-    return devices[0];
+function InitilizePurifier() {
+    return new Promise(async (res, rej) => {
+        try {
+            miio.models['zhimi.airpurifier.mc1'] = AirPurifier;
+            let ipArray = await getMiDeviceIpAddress(ONE_SECOND * 30);
+            let devices = [];
+            for (const ip of ipArray) {
+                devices.push(await connectToDevice(ip, PurifierToken));
+            }
+            res(devices[0]);
+        } catch (err) {
+            rej(err);
+        }
+    });
 }
 
 async function getMiDeviceIpAddress(timeout) {
@@ -52,22 +69,6 @@ function connectToDevice(address, token) {
     });
 }
 
-async function logDeviceParameters(device) {
-    if (device.matches('type:air-purifier')) {
-        console.log('Air purifier on:', await device.power());
-        console.log('Mode:', await device.mode());
-        const temp = await device.temperature();
-        console.log('Temperature:', temp.celsius);
-
-        const rh = await device.relativeHumidity();
-        console.log('Relative humidity:', rh);
-
-        const aqi = await device.pm2_5();
-        console.log('Air Quality Index:', aqi);
-    }
-}
-
-
 function disconnectHandler() {
     clearInterval(sendInterval);
     client.open().catch((err) => {
@@ -80,14 +81,24 @@ function messageHandler(msg) {
     client.complete(msg, printResultFor('completed'));
 }
 
-function generateMessage() {
-    const windSpeed = 10 + (Math.random() * 4); // range: [10, 14]
-    const temperature = 20 + (Math.random() * 10); // range: [20, 30]
-    const humidity = 60 + (Math.random() * 20); // range: [60, 80]
-    const data = JSON.stringify({ deviceId: 'MiAirPurifier', windSpeed: windSpeed, temperature: temperature, humidity: humidity });
-    const message = new Message(data);
-    message.properties.add('temperatureAlert', (temperature > 28) ? 'true' : 'false');
-    return message;
+async function generateMessage() {
+    return new Promise(async (res, rej) => {
+        try {
+            let data = new messageObj();
+            if (device.matches('type:air-purifier')) {
+                console.log('Air purifier on:', await device.power());
+                console.log('Mode:', await device.mode());
+                const temp = await device.temperature();
+                data.temp = temp.celsius;
+                data.rh = await device.relativeHumidity();
+                data.aqi = await device.pm2_5();
+            }
+            res(new Message(JSON.stringify(data)));
+
+        } catch (err) {
+            rej(err);
+        }
+    });
 }
 
 function errorCallback(err) {
@@ -96,12 +107,12 @@ function errorCallback(err) {
 
 function connectCallback() {
     console.log('Client connected');
-    // Create a message and send it to the IoT Hub every two seconds
-    sendInterval = setInterval(() => {
-        const message = generateMessage();
+    // Create a message and send it to the IoT Hub every 60 seconds
+    sendInterval = setInterval(async () => {
+        const message = await generateMessage();
         console.log('Sending message: ' + message.getData());
         client.sendEvent(message, printResultFor('send'));
-    }, 2000);
+    }, 60 * ONE_SECOND_MS);
 
 }
 
@@ -115,18 +126,14 @@ function printResultFor(op) {
 }
 
 
-function Initilize() {
-    const device = InitilizePurifier();
-    let client = Client.fromConnectionString(deviceConnectionString, Protocol);
-
+async function Initilize() {
+    device = await InitilizePurifier();
     client.on('connect', connectCallback);
     client.on('error', errorCallback);
     client.on('disconnect', disconnectHandler);
     client.on('message', messageHandler);
-
     client.open()
         .catch(err => {
             console.error('Could not connect: ' + err.message);
         });
-
 }
