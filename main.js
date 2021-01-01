@@ -1,3 +1,4 @@
+'use strict';
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -36,7 +37,7 @@ async function getMiDeviceIpAddress(timeout) {
     return new Promise((resolve) => {
         const devices = miio.devices();
         devices.on('available', device => {
-            console.log('Found device - ' + device.address);
+            console.log('Found miio device at IP - ' + device.address);
             ipArray.push(device.address);
             // Assuming only 1 miio device is there and resolving quickly.
             resolve(ipArray);
@@ -62,7 +63,6 @@ function connectToDevice(address, token) {
 
 async function logDeviceParameters(device) {
     if (device.matches('type:air-purifier')) {
-        console.log('\n');
         console.log('Air purifier on:', await device.power());
         console.log('Mode:', await device.mode());
         const temp = await device.temperature();
